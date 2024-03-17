@@ -1,17 +1,22 @@
-﻿using System;
-using System.Text;
-using System.Text.Json;
-using SPM;
+﻿using System.Reflection;
 
-class Program
+namespace SPM;
+
+internal static class Program
 {
-    static void Main(string[] args)
+    private static void Main(string[] args)
     {
         Console.WriteLine("Welcome to SPM - Simple Password Manager!\nType 'help' to see what we can do.");
 
         var commands = new Commands();
         commands.Initialize();
-        // Main loop for accepting user commands
+        Console.CancelKeyPress += delegate { commands.Save(); };
+        
+        MainLoop(commands);
+    }
+
+    private static void MainLoop(Commands commands)
+    {
         while (true)
         {
             Console.Write("SPM > ");
@@ -22,39 +27,32 @@ class Program
 
             string[] commandParts = input.Split(' ');
             string command = commandParts[0];
-            string[] arguments = commandParts.Length > 1 ? commandParts[1..] : [];
+            object[] arguments = commandParts.Length > 1 
+                ? commandParts[1..].Select(x => (object) x).ToArray()
+                : [];
 
-            switch (command.ToLower())
-            {
-                case "help":
-                    DisplayHelp();
-                    break;
-                
-                case "add":
-                    // TODO: Test implementation. Add actual one.
-                    commands.Add(new LoginCredentials($"test{Random.Shared.Next()}", $"{Random.Shared.Next()}", $"{Random.Shared.Next()}"));
-                    break;
-                
-                case "list":
-                    commands.List();
-                    break;
-    
-                default:
-                    Console.WriteLine("Invalid command. Type 'help' to see available commands.");
-                    break;
-            }
+            MethodInfo? foundCommand = typeof(Commands).GetMethods()
+                .FirstOrDefault(m => m.GetCustomAttribute<CommandAttribute>()?.CommandName == command);
+            CallCommand(commands, foundCommand, arguments);
         }
     }
 
-    static void DisplayHelp()
+    private static void CallCommand(Commands commands, MethodInfo? foundCommand, object[] arguments)
     {
-        Console.WriteLine("Available commands:");
-        Console.WriteLine("  help                 - Display this help message");
-        Console.WriteLine("  add <service> <password>   - Add a password for a service");
-        Console.WriteLine("  update <service> <new_password> - Update the password for a service");
-        Console.WriteLine("  remove <service>     - Remove the password for a service");
-        Console.WriteLine("  list                 - List all stored passwords");
-        Console.WriteLine("  save                 - Save changes to passwords");
-        Console.WriteLine("  exit                 - Save changes and exit the program");
+        if (foundCommand is null)
+        {
+            Console.WriteLine("Command is not found. Use 'help' to get information about commands.");
+            return;
+        }
+
+        try
+        {
+            foundCommand.Invoke(commands, arguments);
+        }
+        catch (Exception _) when (_ is TargetParameterCountException or ArgumentException)
+        {
+            Console.WriteLine("Wrong command usage.");
+            Console.WriteLine($"Usage: {foundCommand.GetCustomAttribute<CommandAttribute>()!.Usage}");
+        }
     }
 }
