@@ -2,11 +2,12 @@ using System.Text;
 
 namespace SPM;
 
-internal class Commands
+public class Commands
 {
     private List<LoginCredentials> _logins = [];
     private byte[] _password = [];
     private string? _defaultFilePath;
+    
     public void Initialize()
     {
         string documentsPath = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
@@ -62,6 +63,7 @@ internal class Commands
 
         _logins.Remove(loginCredentials.Value);
     }
+    [Command(CommandName = "exit", Usage = "exit - Save changes and exit the program")]
     public void Exit()
     {
         Save();
