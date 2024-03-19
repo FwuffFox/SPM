@@ -11,42 +11,20 @@ public class AesEncryption
     /// <param name="filePath">File to write to.</param>
     /// <param name="inputData">Data to encrypt.</param>
     /// <param name="password">Password used for encryption.</param>
-    /// <returns>true if succeeded; false otherwise.</returns>
-    public static bool TryEncryptToFile<T>(string filePath, T inputData, ReadOnlySpan<byte> password)
+    public static void EncryptToFile<T>(string filePath, T inputData, ReadOnlySpan<byte> password)
     {
-        try
-        {
-            EncryptData(new FileStream(filePath, FileMode.Create, FileAccess.Write),
-                inputData, password);
-            return true;
-        }
-        catch (Exception e)
-        {
-            Console.WriteLine(e);
-            return false;
-        }
+        EncryptData(new FileStream(filePath, FileMode.Create, FileAccess.Write), inputData, password);
     }
 
     /// <summary>
     /// Decrypts data from a file.
     /// </summary>
     /// <param name="filePath">File to decrypt from.</param>
-    /// <param name="outputData">Decrypted data. Null if decryption failed.</param>
     /// <param name="password">Password used for decryption.</param>
-    /// <returns>true if succeeded; false otherwise.</returns>
-    public static bool TryDecryptFromFile<T>(string filePath, out T? outputData, ReadOnlySpan<byte> password)
+    /// <exception cref="FileNotFoundException">File can't be found.</exception>
+    public static T DecryptFromFile<T>(string filePath, ReadOnlySpan<byte> password)
     {
-        try
-        {
-            outputData = DecryptData<T>(new FileStream(filePath, FileMode.Open, FileAccess.Read), password);
-            return true;
-        }
-        catch (Exception e)
-        {
-            Console.WriteLine(e);
-            outputData = default;
-            return false;
-        }
+        return DecryptData<T>(new FileStream(filePath, FileMode.Open, FileAccess.Read), password);
     }
     
     /// <summary>
@@ -56,6 +34,7 @@ public class AesEncryption
     /// <param name="inputData">Data to encrypt.</param>
     /// <param name="password">Password used for encryption.</param>
     /// <param name="leaveStreamOpen">True to not close the stream; otherwise, false.</param>
+    /// /// <exception cref="CryptographicException">Failed to encrypt.</exception>
     public static void EncryptData<T>(
         Stream stream,
         T inputData,
@@ -65,7 +44,7 @@ public class AesEncryption
         Span<byte> key = stackalloc byte[32];
         Span<byte> iv = stackalloc byte[16];
         HashPasswordToKeyAndIv(password, key, iv);
-        
+
         using ICryptoTransform encryptor = Aes.Create().CreateEncryptor(key.ToArray(), iv.ToArray());
         using CryptoStream cryptoStream = new(stream, encryptor, CryptoStreamMode.Write, leaveStreamOpen);
 
@@ -78,6 +57,7 @@ public class AesEncryption
     /// <param name="stream">Stream to read from.</param>
     /// <param name="password">Password used for encryption.</param>
     /// <param name="leaveStreamOpen">True to not close the stream; otherwise, false.</param>
+    /// <exception cref="CryptographicException">Failed to decrypt. Either password is incorrect or file is corrupted.</exception>
     public static T DecryptData<T>(
         Stream stream,
         ReadOnlySpan<byte> password,
@@ -86,7 +66,7 @@ public class AesEncryption
         Span<byte> key = stackalloc byte[32];
         Span<byte> iv = stackalloc byte[16];
         HashPasswordToKeyAndIv(password, key, iv);
-        
+
         using ICryptoTransform decryptor = Aes.Create().CreateDecryptor(key.ToArray(), iv.ToArray());
         using CryptoStream cryptoStream = new(stream, decryptor, CryptoStreamMode.Read, leaveStreamOpen);
         return JsonSerializer.Deserialize<T>(cryptoStream, JsonSerializerOptions.Default)!;

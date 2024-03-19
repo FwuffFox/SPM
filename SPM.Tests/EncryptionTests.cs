@@ -1,4 +1,3 @@
-using SPM;
 using SPM.Models;
 using Xunit;
 using Xunit.Abstractions;

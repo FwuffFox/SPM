@@ -6,11 +6,11 @@ internal static class Program
 {
     private static void Main(string[] args)
     {
-        System.Console.WriteLine("Welcome to SPM - Simple Password Manager!\nType 'help' to see what we can do.");
+        Console.WriteLine("Welcome to SPM - Simple Password Manager!\nType 'help' to see what we can do.");
         string defaultPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "SPM",
             "Default.enc");
         var commands = new Commands(defaultPath);
-        System.Console.CancelKeyPress += delegate { commands.Save(); };
+        Console.CancelKeyPress += delegate { commands.Save(); };
         
         MainLoop(commands);
     }
@@ -19,8 +19,8 @@ internal static class Program
     {
         while (true)
         {
-            System.Console.Write("SPM > ");
-            string input = System.Console.ReadLine()!.Trim();
+            Utilities.WriteColorized("SPM > ", ConsoleColor.Green);
+            string input = Console.ReadLine()!.Trim();
 
             if (string.IsNullOrWhiteSpace(input))
                 continue;
@@ -32,7 +32,13 @@ internal static class Program
                 : [];
 
             MethodInfo? foundCommand = typeof(Commands).GetMethods()
-                .FirstOrDefault(m => m.GetCustomAttribute<CommandAttribute>()?.CommandName == command);
+                .FirstOrDefault(m =>
+                {
+                    var commandAttribute = m.GetCustomAttribute<CommandAttribute>();
+                    if (commandAttribute is null) return false;
+                    return commandAttribute.CommandName == command 
+                           || commandAttribute.CommandAliases.Contains(command);
+                });
             CallCommand(commands, foundCommand, arguments);
         }
     }
@@ -41,7 +47,7 @@ internal static class Program
     {
         if (foundCommand is null)
         {
-            System.Console.WriteLine("Command is not found. Use 'help' to get information about commands.");
+            Console.WriteLine("Command is not found. Use 'help' to get information about commands.");
             return;
         }
 
@@ -51,8 +57,8 @@ internal static class Program
         }
         catch (Exception _) when (_ is TargetParameterCountException or ArgumentException)
         {
-            System.Console.WriteLine("Wrong command usage.");
-            System.Console.WriteLine($"Usage: {foundCommand.GetCustomAttribute<CommandAttribute>()!.Usage}");
+            Console.WriteLine("Wrong command usage.");
+            Console.WriteLine($"Usage: {foundCommand.GetCustomAttribute<CommandAttribute>()!.Usage}");
         }
     }
 }

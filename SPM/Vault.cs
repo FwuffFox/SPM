@@ -1,32 +1,62 @@
-using System.Collections;
-using System.Collections.ObjectModel;
+using System.Security.Cryptography;
 using SPM.Models;
 
 namespace SPM;
 
 public class Vault(VaultInfo vaultInfo)
 {
-    public static bool TryCreateVault(string vaultPath, ReadOnlySpan<byte> passwordUtf8Bytes, out Vault newVault)
+    /// <summary>
+    /// Creates a new vault.
+    /// </summary>
+    /// <param name="vaultPath">Path to a new vault.</param>
+    /// <param name="passwordUtf8Bytes">Password used for encryption.</param>
+    /// <returns>An opened vault.</returns>
+    /// <exception cref="CryptographicException">Failed to encrypt vault.</exception>
+    public static Vault CreateVault(string vaultPath, ReadOnlySpan<byte> passwordUtf8Bytes)
     {
-        var newVaultInfo = new VaultInfo();
-        newVault = new Vault(newVaultInfo);
-        
-        return File.Exists(vaultPath) &&
-               AesEncryption.TryEncryptToFile(vaultPath, newVaultInfo, passwordUtf8Bytes);
+        try
+        {
+            var newVaultInfo = new VaultInfo();
+            AesEncryption.EncryptToFile(vaultPath, newVaultInfo, passwordUtf8Bytes);
+            return new Vault(newVaultInfo);
+        }
+        catch (CryptographicException e)
+        {
+            throw new CryptographicException("Failed to encrypt the vault.");
+        }
     }
     
-    public static bool TryOpenVault(string vaultPath, ReadOnlySpan<byte> passwordUtf8Bytes, out Vault decryptedVault)
+    /// <summary>
+    /// Opens a vault.
+    /// </summary>
+    /// <param name="vaultPath">File to decrypt from.</param>
+    /// <param name="passwordUtf8Bytes">Password used for encryption.</param>
+    /// <returns>An opened vault.</returns>
+    /// <exception cref="FileNotFoundException">File not found.</exception>
+    /// <exception cref="CryptographicException">Failed to decrypt vault.</exception>
+    public static Vault TryOpenVault(string vaultPath, ReadOnlySpan<byte> passwordUtf8Bytes)
     {
-        decryptedVault = new Vault(default);
-        if (!AesEncryption.TryDecryptFromFile(vaultPath,
-                out VaultInfo decryptedVaultInfo, passwordUtf8Bytes)) return false;
-        decryptedVault = new Vault(decryptedVaultInfo);
-        return true;
+        try
+        {
+            return new Vault(AesEncryption.DecryptFromFile<VaultInfo>(vaultPath, passwordUtf8Bytes));
+        }
+        catch (FileNotFoundException e)
+        {
+            throw new FileNotFoundException($"File {vaultPath} not found.", e);
+        }
+        catch (CryptographicException e)
+        {
+            throw new CryptographicException("Failed to decrypt vault.", e);
+        }
+        catch (Exception e)
+        {
+            throw new Exception("Unknown error at opening vault.", e);
+        }
     }
 
-    public bool TrySaveVault(string vaultPath, ReadOnlySpan<byte> passwordUtf8Bytes)
+    public void SaveVault(string vaultPath, ReadOnlySpan<byte> passwordUtf8Bytes)
     {
-        return AesEncryption.TryEncryptToFile(vaultPath, vaultInfo, passwordUtf8Bytes);
+        AesEncryption.EncryptToFile(vaultPath, vaultInfo, passwordUtf8Bytes);
     }
 
     public IEnumerable<LoginCredentials> GetAllLoginCredentials()
