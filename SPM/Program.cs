@@ -7,9 +7,9 @@ internal static class Program
     private static void Main(string[] args)
     {
         Console.WriteLine("Welcome to SPM - Simple Password Manager!\nType 'help' to see what we can do.");
-
-        var commands = new Commands();
-        commands.Initialize();
+        string defaultPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "SPM",
+            "Default.enc");
+        var commands = new Commands(defaultPath);
         Console.CancelKeyPress += delegate { commands.Save(); };
         
         MainLoop(commands);

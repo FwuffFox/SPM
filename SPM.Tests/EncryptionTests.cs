@@ -1,4 +1,5 @@
 using SPM;
+using SPM.Models;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -21,9 +22,9 @@ public class EncryptionTests
         
         var enc = new AesEncryption();
         using var encryptedDataStream = new MemoryStream();
-        enc.EncryptData(encryptedDataStream, loginCredentials, password, true);
+        AesEncryption.EncryptData(encryptedDataStream, loginCredentials, password, true);
         encryptedDataStream.Position = 0;
-        var decryptedData = enc.DecryptData<LoginCredentials>(encryptedDataStream, password);
+        var decryptedData = AesEncryption.DecryptData<LoginCredentials>(encryptedDataStream, password);
         Assert.Equal(loginCredentials, decryptedData);
     }
 }

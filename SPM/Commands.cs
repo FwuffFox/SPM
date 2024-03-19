@@ -1,31 +1,27 @@
 using System.Text;
+using SPM.Models;
 
 namespace SPM;
 
 public class Commands
 {
-    private List<LoginCredentials> _logins = [];
-    private byte[] _password = [];
-    private string? _defaultFilePath;
+    private readonly byte[] _password;
+    private string _pathToVault;
+    private readonly Vault _vault;
     
-    public void Initialize()
+    public Commands(string pathToVault)
     {
-        string documentsPath = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
-        string folderPath = Path.Combine(documentsPath, "SPM");
-        _defaultFilePath = Path.Combine(folderPath, "Default");
-        
-        if (!Directory.Exists(folderPath))
+        _pathToVault = pathToVault;
+        if (!File.Exists(pathToVault))
         {
-            Directory.CreateDirectory(folderPath);
-        }
-        if (!File.Exists(_defaultFilePath))
-        {
-            _password = AskForPassword("Enter password which will be used for encryption. Please, make sure to remember it!: ");
-            new AesEncryption().EncryptData(new FileStream(_defaultFilePath, FileMode.Create, FileAccess.Write), _logins, _password);
+            Console.WriteLine($"Trying to create the vault at {pathToVault}");
+            _password = AskForPassword("Enter password to encrypt the vault: ");
+            Vault.TryCreateVault(pathToVault, _password, out _vault);
             return;
         }
-        _password = AskForPassword("Enter password to decrypt: ");
-        _logins = new AesEncryption().DecryptData<List<LoginCredentials>>(new FileStream(_defaultFilePath, FileMode.Open, FileAccess.Read), _password);
+        Console.WriteLine($"Trying to open the vault at {pathToVault}");
+        _password = AskForPassword("Enter password to decrypt the vault: ");
+        Vault.TryOpenVault(pathToVault, _password, out _vault);
     }
 
     [Command(CommandName = "add", Usage = "add <service> <login> <password> - Add a password for a service")]
@@ -33,13 +29,13 @@ public class Commands
     {
         string[] parameters = [service, login, password];
         if (parameters.Any(string.IsNullOrEmpty)) throw new ArgumentException();
-        _logins.Add(new LoginCredentials(ref parameters));
+        _vault.Add(new LoginCredentials(ref parameters));
     }
 
     [Command(CommandName = "list", Usage = "list - List all stored passwords")]
     public void List()
     {
-        foreach (LoginCredentials loginCredentials in _logins)
+        foreach (LoginCredentials loginCredentials in _vault.GetAllLoginCredentials())
         {
             Console.WriteLine($"{loginCredentials.Service} {loginCredentials.Login} {loginCredentials.Password}");
         }
@@ -48,21 +44,15 @@ public class Commands
     [Command(CommandName = "save", Usage = "save - Save changes to passwords")]
     public void Save()
     {
-        new AesEncryption().EncryptData(new FileStream(_defaultFilePath!, FileMode.Create, FileAccess.Write), _logins, _password);
+        _vault.TrySaveVault(_pathToVault, _password);
     }
 
     [Command(CommandName = "remove", Usage = "remove <service> - Remove the password for a service")]
     public void Remove(string service)
     {
-        LoginCredentials? loginCredentials = _logins.FirstOrDefault(x => x.Service == service);
-        if (string.IsNullOrEmpty(loginCredentials.Value.Login))
-        {
-            Console.WriteLine($"Entry {service} not found. Run 'list' to view saved entries.");
-            return;
-        }
-
-        _logins.Remove(loginCredentials.Value);
+        throw new NotImplementedException();
     }
+    
     [Command(CommandName = "exit", Usage = "exit - Save changes and exit the program")]
     public void Exit()
     {

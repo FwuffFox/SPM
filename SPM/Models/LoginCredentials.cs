@@ -1,4 +1,4 @@
-namespace SPM;
+namespace SPM.Models;
 
 public struct LoginCredentials(string service, string login, string password)
 {
