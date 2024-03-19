@@ -1,4 +1,4 @@
-namespace SPM;
+namespace SPM.Shell;
 
 [AttributeUsage(AttributeTargets.Method)]
 public class CommandAttribute : Attribute

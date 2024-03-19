@@ -7,6 +7,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SPM.Tests", "SPM.Tests\SPM.
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SPM", "SPM\SPM.csproj", "{BF98A746-B225-4AC8-9BA6-B9A35BC5A38A}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SPM.Shell", "SPM.Shell\SPM.Shell.csproj", "{39D95D53-5E3A-48F3-A6B5-FD14002B5E9B}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,6 +23,10 @@ Global
 		{BF98A746-B225-4AC8-9BA6-B9A35BC5A38A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{BF98A746-B225-4AC8-9BA6-B9A35BC5A38A}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{BF98A746-B225-4AC8-9BA6-B9A35BC5A38A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{39D95D53-5E3A-48F3-A6B5-FD14002B5E9B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{39D95D53-5E3A-48F3-A6B5-FD14002B5E9B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{39D95D53-5E3A-48F3-A6B5-FD14002B5E9B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{39D95D53-5E3A-48F3-A6B5-FD14002B5E9B}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

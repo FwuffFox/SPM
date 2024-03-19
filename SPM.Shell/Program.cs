@@ -1,16 +1,16 @@
 ﻿using System.Reflection;
 
-namespace SPM;
+namespace SPM.Shell;
 
 internal static class Program
 {
     private static void Main(string[] args)
     {
-        Console.WriteLine("Welcome to SPM - Simple Password Manager!\nType 'help' to see what we can do.");
+        System.Console.WriteLine("Welcome to SPM - Simple Password Manager!\nType 'help' to see what we can do.");
         string defaultPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "SPM",
             "Default.enc");
         var commands = new Commands(defaultPath);
-        Console.CancelKeyPress += delegate { commands.Save(); };
+        System.Console.CancelKeyPress += delegate { commands.Save(); };
         
         MainLoop(commands);
     }
@@ -19,8 +19,8 @@ internal static class Program
     {
         while (true)
         {
-            Console.Write("SPM > ");
-            string input = Console.ReadLine()!.Trim();
+            System.Console.Write("SPM > ");
+            string input = System.Console.ReadLine()!.Trim();
 
             if (string.IsNullOrWhiteSpace(input))
                 continue;
@@ -41,7 +41,7 @@ internal static class Program
     {
         if (foundCommand is null)
         {
-            Console.WriteLine("Command is not found. Use 'help' to get information about commands.");
+            System.Console.WriteLine("Command is not found. Use 'help' to get information about commands.");
             return;
         }
 
@@ -51,8 +51,8 @@ internal static class Program
         }
         catch (Exception _) when (_ is TargetParameterCountException or ArgumentException)
         {
-            Console.WriteLine("Wrong command usage.");
-            Console.WriteLine($"Usage: {foundCommand.GetCustomAttribute<CommandAttribute>()!.Usage}");
+            System.Console.WriteLine("Wrong command usage.");
+            System.Console.WriteLine($"Usage: {foundCommand.GetCustomAttribute<CommandAttribute>()!.Usage}");
         }
     }
 }

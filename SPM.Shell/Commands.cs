@@ -1,7 +1,7 @@
 using System.Text;
 using SPM.Models;
 
-namespace SPM;
+namespace SPM.Shell;
 
 public class Commands
 {
