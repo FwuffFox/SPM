@@ -7,7 +7,7 @@ namespace SPM.Shell;
 
 public partial class Commands
 {
-    [Command(CommandName = "add", Usage = "add - Add a password for a service")]
+    [Command(CommandName = "add", Usage = "add - Add a password for a service. Interactive.")]
     public void Add()
     {
         string service = AnsiConsole.Prompt(SpectreExtensions.CreateTextPrompt<string>("Enter service name:"));
@@ -16,21 +16,18 @@ public partial class Commands
             SpectreExtensions.CreatePasswordPrompt("Enter password (or leave empty to generate one):")
                 .AllowEmpty()
             );
-        if (password.Length != 0)
+        if (string.IsNullOrWhiteSpace(password))
         {
-            _vault.Add(new LoginCredentials(service, login, password));
-            AnsiConsole.Write(
-                new Table()
-                    .AddColumn("Service")
-                    .AddColumn("Login")
-                    .AddColumn("Password")
-                    .AddRow(service, login, password)
-                );
-            return;
+            password = PasswordGenerator.GenerateSecurePassword();
         }
-        
-        // TODO: Generation
-        throw new NotImplementedException();
+        _vault.Add(new LoginCredentials(service, login, password));
+        AnsiConsole.Write(
+            new Table()
+                .AddColumn("Service")
+                .AddColumn("Login")
+                .AddColumn("Password")
+                .AddRow(service.EscapeMarkup(), login.EscapeMarkup(), password.EscapeMarkup())
+        );
     }
 
     [Command(CommandName = "list", CommandAliases = ["ls"],
@@ -44,7 +41,8 @@ public partial class Commands
         
         foreach (LoginCredentials loginCredentials in _vault.GetAllLoginCredentials())
         {
-            table.AddRow(loginCredentials.Service, loginCredentials.Login, loginCredentials.Password);
+            table.AddRow(loginCredentials.Service.EscapeMarkup(), loginCredentials.Login.EscapeMarkup(),
+                loginCredentials.Password.EscapeMarkup());
         }
         
         AnsiConsole.Write(table);

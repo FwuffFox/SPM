@@ -64,8 +64,24 @@ public class Vault(VaultInfo vaultInfo)
         return vaultInfo.Logins.AsReadOnly();
     }
     
+    /// <summary>
+    /// Adds a loginCredentials if it doesn't exist already
+    /// </summary>
+    /// <param name="loginCredentials"></param>
     public void Add(LoginCredentials loginCredentials)
     {
+        if (vaultInfo.Logins.Contains(loginCredentials)) return;
         vaultInfo.Logins.Add(loginCredentials);
+    }
+    
+    /// <summary>
+    /// Removes a loginCredentials if it exists.
+    /// </summary>
+    /// <param name="loginCredentials">Login to remove.</param>
+    /// <returns> true if item is successfully removed; otherwise, false.
+    /// This method also returns false if item was not found</returns>
+    public bool Remove(LoginCredentials loginCredentials)
+    {
+        return vaultInfo.Logins.Remove(loginCredentials);
     }
 }
