@@ -1,6 +1,7 @@
 using System.Security.Cryptography;
 using System.Text;
 using Spectre.Console;
+using SPM.Shell.Extensions;
 
 namespace SPM.Shell;
 
@@ -28,7 +29,9 @@ public partial class Commands
             try
             {
                 Console.WriteLine($"Trying to open the vault at {pathToVault}");
-                _password = AskForPassword("Enter password to decrypt the vault:");
+                _password = AnsiConsole.Prompt(
+                    SpectreExtensions.CreatePasswordPrompt("Enter password to decrypt the vault:")
+                ).GetUtf8Bytes();
                 _vault = Vault.TryOpenVault(pathToVault, _password);
                 break;
             }
@@ -46,7 +49,11 @@ public partial class Commands
             try
             {
                 Console.WriteLine($"Trying to create the vault at {pathToVault}");
-                _password = AskForPassword("Enter password to create a new Vault:", true);
+                
+                _password = AnsiConsole.Prompt(
+                    SpectreExtensions.CreatePasswordPrompt("Enter password to create a new Vault:", true)
+                ).GetUtf8Bytes();
+                
                 _vault = Vault.CreateVault(pathToVault, _password);
                 break;
             }
@@ -55,23 +62,5 @@ public partial class Commands
                 AnsiConsole.WriteException(e);
             }
         }
-    }
-
-    private static byte[] AskForPassword(string prompt, bool validate = false)
-    {
-        var textPrompt = new TextPrompt<string>($"[blue]{prompt}[/]")
-            .PromptStyle("red")
-            .Secret();
-        if (validate)
-            textPrompt.Validate(pass =>
-            {
-                if (pass.Length < 8) return ValidationResult.Error("Password is too short. Use 8 or more characters.");
-                if (!(pass.Any(char.IsDigit) || pass.Any(char.IsLetter) || pass.All(ch => !char.IsLetterOrDigit(ch))))
-                    return ValidationResult.Error(
-                        "Password should contain at least one letter, one digit and a special character.");
-                return ValidationResult.Success();
-            });
-        
-        return Encoding.UTF8.GetBytes(AnsiConsole.Prompt(textPrompt));
     }
 }

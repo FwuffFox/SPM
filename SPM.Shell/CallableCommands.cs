@@ -1,17 +1,36 @@
 using System.Reflection;
 using Spectre.Console;
 using SPM.Models;
+using SPM.Shell.Extensions;
 
 namespace SPM.Shell;
 
 public partial class Commands
 {
-    [Command(CommandName = "add", Usage = "add <service> <login> <password> - Add a password for a service")]
-    public void Add(string service, string login, string password)
+    [Command(CommandName = "add", Usage = "add - Add a password for a service")]
+    public void Add()
     {
-        string[] parameters = [service, login, password];
-        if (parameters.Any(string.IsNullOrEmpty)) throw new ArgumentException();
-        _vault.Add(new LoginCredentials(ref parameters));
+        string service = AnsiConsole.Prompt(SpectreExtensions.CreateTextPrompt<string>("Enter service name:"));
+        string login = AnsiConsole.Prompt(SpectreExtensions.CreateTextPrompt<string>("Enter login:"));
+        string password = AnsiConsole.Prompt(
+            SpectreExtensions.CreatePasswordPrompt("Enter password (or leave empty to generate one):")
+                .AllowEmpty()
+            );
+        if (password.Length != 0)
+        {
+            _vault.Add(new LoginCredentials(service, login, password));
+            AnsiConsole.Write(
+                new Table()
+                    .AddColumn("Service")
+                    .AddColumn("Login")
+                    .AddColumn("Password")
+                    .AddRow(service, login, password)
+                );
+            return;
+        }
+        
+        // TODO: Generation
+        throw new NotImplementedException();
     }
 
     [Command(CommandName = "list", CommandAliases = ["ls"],
