@@ -1,4 +1,6 @@
 ﻿using System.Reflection;
+using System.Text.Json;
+using Spectre.Console;
 
 namespace SPM.Shell;
 
@@ -6,20 +8,32 @@ internal static class Program
 {
     private static void Main(string[] args)
     {
+        string path;
         Console.WriteLine("Welcome to SPM - Simple Password Manager!\nType 'help' to see what we can do.");
-        string defaultPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "SPM",
+        if (args.Length != 0)
+        {
+            path = Path.GetFullPath(args[0]);
+        }
+        else path = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "SPM",
             "Default.enc");
-        var commands = new Commands(defaultPath);
+        var commands = new Commands(path);
         Console.CancelKeyPress += delegate { commands.Save(); };
         
-        MainLoop(commands);
+        MainLoop(commands, path);
     }
 
-    private static void MainLoop(Commands commands)
+    private static void MainLoop(Commands commands, string path)
     {
         while (true)
         {
-            Utilities.WriteColorized("SPM > ", ConsoleColor.Green);
+            AnsiConsole.Markup("[bold green]SPM [/]");
+            AnsiConsole.Write(new TextPath(path)
+                .RootColor(Color.Green)
+                .SeparatorColor(Color.Green)
+                .LeafColor(Color.Aqua)
+                .StemColor(Color.Green)
+            );
+            AnsiConsole.Markup("[bold green]> [/]");
             string input = Console.ReadLine()!.Trim();
 
             if (string.IsNullOrWhiteSpace(input))

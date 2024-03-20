@@ -28,13 +28,13 @@ public partial class Commands
             try
             {
                 Console.WriteLine($"Trying to open the vault at {pathToVault}");
-                _password = AskForPassword("Enter password to decrypt the vault: ");
+                _password = AskForPassword("Enter password to decrypt the vault:");
                 _vault = Vault.TryOpenVault(pathToVault, _password);
                 break;
             }
             catch (CryptographicException e)
             {
-                Utilities.WriteErrorLine(e.Message);
+                AnsiConsole.WriteException(e);
             }
         }
     }
@@ -46,20 +46,20 @@ public partial class Commands
             try
             {
                 Console.WriteLine($"Trying to create the vault at {pathToVault}");
-                _password = AskForPassword("Enter password to create a new Vault: ", true);
+                _password = AskForPassword("Enter password to create a new Vault:", true);
                 _vault = Vault.CreateVault(pathToVault, _password);
                 break;
             }
             catch (CryptographicException e)
             {
-                Utilities.WriteErrorLine(e.Message);
+                AnsiConsole.WriteException(e);
             }
         }
     }
 
     private static byte[] AskForPassword(string prompt, bool validate = false)
     {
-        var textPrompt = new TextPrompt<string>(prompt)
+        var textPrompt = new TextPrompt<string>($"[blue]{prompt}[/]")
             .PromptStyle("red")
             .Secret();
         if (validate)
