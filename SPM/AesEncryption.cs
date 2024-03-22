@@ -77,8 +77,11 @@ public class AesEncryption
         Span<byte> hashedPasswordKey,
         Span<byte> hashedPasswordIv)
     {
-        SHA256.HashData(password, hashedPasswordKey);
-        MD5.HashData(password, hashedPasswordIv);
+        using var kdf = new Rfc2898DeriveBytes(password.ToArray(),
+            new byte[16], 10000, HashAlgorithmName.SHA512);
+        byte[] derivedKey = kdf.GetBytes(48); // Get a 48-byte key
+        derivedKey.AsSpan(0, 32).CopyTo(hashedPasswordKey);
+        derivedKey.AsSpan(32, 16).CopyTo(hashedPasswordIv);
     }
 
 }

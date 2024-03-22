@@ -3,6 +3,9 @@ using SPM.Models;
 
 namespace SPM;
 
+/// <summary>
+/// Represents a secure vault for storing login credentials.
+/// </summary>
 public class Vault(VaultInfo vaultInfo)
 {
     /// <summary>
@@ -25,9 +28,9 @@ public class Vault(VaultInfo vaultInfo)
             throw new CryptographicException("Failed to encrypt the vault.");
         }
     }
-    
+
     /// <summary>
-    /// Opens a vault.
+    /// Opens an existing vault.
     /// </summary>
     /// <param name="vaultPath">File to decrypt from.</param>
     /// <param name="passwordUtf8Bytes">Password used for encryption.</param>
@@ -54,26 +57,35 @@ public class Vault(VaultInfo vaultInfo)
         }
     }
 
+    /// <summary>
+    /// Saves the current state of the vault to a file.
+    /// </summary>
+    /// <param name="vaultPath">Path to the vault file.</param>
+    /// <param name="passwordUtf8Bytes">Password used for encryption.</param>
     public void SaveVault(string vaultPath, ReadOnlySpan<byte> passwordUtf8Bytes)
     {
         AesEncryption.EncryptToFile(vaultPath, vaultInfo, passwordUtf8Bytes);
     }
 
+    /// <summary>
+    /// Retrieves all login credentials stored in the vault.
+    /// </summary>
+    /// <returns>A read-only list of login credentials.</returns>
     public IEnumerable<LoginCredentials> GetAllLoginCredentials()
     {
         return vaultInfo.Logins.AsReadOnly();
     }
-    
+
     /// <summary>
     /// Adds a loginCredentials if it doesn't exist already
     /// </summary>
-    /// <param name="loginCredentials"></param>
+    /// <param name="loginCredentials">The login credentials to add.</param>
     public void Add(LoginCredentials loginCredentials)
     {
         if (vaultInfo.Logins.Contains(loginCredentials)) return;
         vaultInfo.Logins.Add(loginCredentials);
     }
-    
+
     /// <summary>
     /// Removes a loginCredentials if it exists.
     /// </summary>
@@ -83,5 +95,20 @@ public class Vault(VaultInfo vaultInfo)
     public bool Remove(LoginCredentials loginCredentials)
     {
         return vaultInfo.Logins.Remove(loginCredentials);
+    }
+
+    /// <summary>
+    /// Removes a list of login credentials from the vault.
+    /// </summary>
+    /// <param name="loginCredentials">The list of login credentials to remove.</param>
+    /// <returns>Always returns true.</returns>
+    public bool Remove(IEnumerable<LoginCredentials> loginCredentials)
+    {
+        foreach (LoginCredentials login in loginCredentials)
+        {
+            vaultInfo.Logins.Remove(login);
+        }
+
+        return true;
     }
 }

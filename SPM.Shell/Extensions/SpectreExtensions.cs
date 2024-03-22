@@ -31,4 +31,20 @@ public static class SpectreExtensions
 
         return textPrompt;
     }
+
+    internal static IEnumerable<T> CreateSelectionPrompt<T>(this IEnumerable<T> choices, string prompt) where T : notnull
+    {
+        var selectionPrompt = new MultiSelectionPrompt<T>()
+            .Title($"[blue]{prompt}[/]")
+            .NotRequired()
+            .AddChoices(choices)
+            .UseConverter(item => item.ToString()!);
+
+        return AnsiConsole.Prompt(selectionPrompt);
+    }
+    
+    public static void DisplayError(string error)
+    {
+        AnsiConsole.MarkupLineInterpolated($"[red]{error}[/]");
+    }
 }

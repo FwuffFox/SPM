@@ -1,5 +1,4 @@
 using System.Security.Cryptography;
-using System.Text;
 using Spectre.Console;
 using SPM.Shell.Extensions;
 

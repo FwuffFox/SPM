@@ -58,7 +58,25 @@ public partial class Commands
         Usage = "remove <service> - Remove the password for a service")]
     public void Remove(string service)
     {
-        throw new NotImplementedException();
+        var logins = _vault.GetAllLoginCredentials()
+            .Where(login => login.Service.StartsWith(service)).ToArray();
+        
+        switch (logins.Length)
+        {
+            case 0:
+                // Error, not found
+                SpectreExtensions.DisplayError($"Service '{service}' not found.");
+                return;
+            
+            case 1:
+                _vault.Remove(logins.First());
+                return;
+            
+            default:
+                var selectedLogins = logins.CreateSelectionPrompt("Select logins to remove:");
+                _vault.Remove(selectedLogins);
+                return;
+        }
     }
 
     [Command(CommandName = "exit", Usage = "exit - Save changes and exit the program")]
