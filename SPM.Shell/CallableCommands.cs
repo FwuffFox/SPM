@@ -60,21 +60,31 @@ public partial class Commands
     {
         var logins = _vault.GetAllLoginCredentials()
             .Where(login => login.Service.StartsWith(service)).ToArray();
-        
+
         switch (logins.Length)
         {
             case 0:
-                // Error, not found
                 SpectreExtensions.DisplayError($"Service '{service}' not found.");
                 return;
             
             case 1:
-                _vault.Remove(logins.First());
+                if (AnsiConsole.Confirm($"Are you sure you want to remove the login for '{service}'?"))
+                {
+                    _vault.Remove(logins.First());
+                }
                 return;
             
             default:
-                var selectedLogins = logins.CreateSelectionPrompt("Select logins to remove:");
-                _vault.Remove(selectedLogins);
+                var selectedLogins = logins.CreateSelectionPrompt("Select logins to remove:").ToArray();
+                if (selectedLogins.Length == 0)
+                {
+                    SpectreExtensions.DisplayError("No logins selected.");
+                    return;
+                }
+                if (AnsiConsole.Confirm($"[blue]Are you sure you want to remove {selectedLogins.Length} selected logins for '{service.EscapeMarkup()}'?[/]"))
+                {
+                    _vault.Remove(selectedLogins);
+                }
                 return;
         }
     }
