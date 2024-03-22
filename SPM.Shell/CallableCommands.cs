@@ -55,7 +55,8 @@ public partial class Commands
     }
 
     [Command(CommandName = "remove", CommandAliases = ["rm"],
-        Usage = "remove <service> - Remove the password for a service")]
+        Usage = "remove <service_prefix> - Remove the password for a service that starts with prefix." +
+                " If multiple found, enter selection mode.")]
     public void Remove(string service)
     {
         var logins = _vault.GetAllLoginCredentials()
