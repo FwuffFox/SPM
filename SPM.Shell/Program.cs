@@ -1,15 +1,20 @@
-﻿using System.Reflection;
-using System.Text.Json;
+﻿using System.Collections.Immutable;
+using System.Reflection;
 using Spectre.Console;
 
 namespace SPM.Shell;
 
 internal static class Program
 {
+    private static readonly ImmutableArray<MethodInfo> AllCommands = typeof(Commands)
+        .GetMethods()
+        .Where(m => m.GetCustomAttribute<CommandAttribute>() != null)
+        .ToImmutableArray();
+    
     private static void Main(string[] args)
     {
-        string path;
         Console.WriteLine("Welcome to SPM - Simple Password Manager!\nType 'help' to see what we can do.");
+        string path;
         if (args.Length != 0)
         {
             path = Path.GetFullPath(args[0]);
@@ -21,7 +26,7 @@ internal static class Program
         
         MainLoop(commands, path);
     }
-
+    
     private static void MainLoop(Commands commands, string path)
     {
         while (true)
@@ -34,6 +39,7 @@ internal static class Program
                 .StemColor(Color.Green)
             );
             AnsiConsole.Markup("[bold green]> [/]");
+            
             string input = Console.ReadLine()!.Trim();
 
             if (string.IsNullOrWhiteSpace(input))
@@ -45,7 +51,7 @@ internal static class Program
                 ? commandParts[1..].Select(x => (object) x).ToArray()
                 : [];
 
-            MethodInfo? foundCommand = typeof(Commands).GetMethods()
+            MethodInfo? foundCommand = AllCommands
                 .FirstOrDefault(m =>
                 {
                     var commandAttribute = m.GetCustomAttribute<CommandAttribute>();
@@ -55,6 +61,7 @@ internal static class Program
                 });
             CallCommand(commands, foundCommand, arguments);
         }
+        // ReSharper disable once FunctionNeverReturns
     }
 
     private static void CallCommand(Commands commands, MethodInfo? foundCommand, object[] arguments)
