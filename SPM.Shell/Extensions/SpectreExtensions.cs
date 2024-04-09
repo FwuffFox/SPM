@@ -1,4 +1,5 @@
 using Spectre.Console;
+using SPM.Models;
 
 namespace SPM.Shell.Extensions;
 
@@ -46,5 +47,43 @@ public static class SpectreExtensions
     public static void DisplayError(string error)
     {
         AnsiConsole.MarkupLineInterpolated($"[red]{error}[/]");
+    }
+
+    public static void DisplayLoginCredentialsInTable(this IEnumerable<LoginCredentials> loginCredentials)
+    {
+        Table table = new Table()
+            .AddColumn("Service")
+            .AddColumn("Login")
+            .AddColumn("Password");
+        
+        foreach (LoginCredentials login in loginCredentials)
+        {
+            table.AddRow(login.Service.EscapeMarkup(), login.Login.EscapeMarkup(),
+                login.Password.EscapeMarkup());
+        }
+        
+        AnsiConsole.Write(table);
+    }
+    
+    public static void DisplayLoginCredentialInTable(this LoginCredentials loginCredentials)
+    {
+        Table table = new Table()
+            .AddColumn("Service")
+            .AddColumn("Login")
+            .AddColumn("Password");
+
+        table.AddRow(loginCredentials.Service.EscapeMarkup(), loginCredentials.Login.EscapeMarkup(),
+            loginCredentials.Password.EscapeMarkup());
+        
+        AnsiConsole.Write(table);
+    }
+
+    public static string AskForPassword()
+    {
+        string input = AnsiConsole.Prompt(
+            SpectreExtensions.CreatePasswordPrompt("Enter password (or leave empty to generate one):")
+                .AllowEmpty()
+        );
+        return string.IsNullOrWhiteSpace(input) ? input : PasswordGenerator.GenerateSecurePassword();
     }
 }

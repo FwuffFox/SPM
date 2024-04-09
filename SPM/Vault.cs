@@ -68,12 +68,21 @@ public class Vault(VaultInfo vaultInfo)
     }
 
     /// <summary>
-    /// Retrieves all login credentials stored in the vault.
+    /// Retrieves login credentials stored in the vault.
     /// </summary>
     /// <returns>A read-only list of login credentials.</returns>
-    public IEnumerable<LoginCredentials> GetAllLoginCredentials()
+    public IEnumerable<LoginCredentials> GetLoginCredentials()
     {
-        return vaultInfo.Logins.AsReadOnly();
+        return vaultInfo.Logins;
+    }
+    
+    /// <summary>
+    /// Retrieves login credentials stored in the vault.
+    /// </summary>
+    /// <returns>A read-only list of login credentials.</returns>
+    public IEnumerable<LoginCredentials> GetLoginCredentials(string startsWith)
+    {
+        return vaultInfo.Logins.Where(login => login.Service.StartsWith(startsWith));
     }
 
     /// <summary>
@@ -110,5 +119,10 @@ public class Vault(VaultInfo vaultInfo)
         }
 
         return true;
+    }
+    
+    public void Update(LoginCredentials old, LoginCredentials @new)
+    {
+        vaultInfo.Logins.Insert(vaultInfo.Logins.IndexOf(old), @new);
     }
 }

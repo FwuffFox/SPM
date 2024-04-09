@@ -12,40 +12,17 @@ public partial class Commands
     {
         string service = AnsiConsole.Prompt(SpectreExtensions.CreateTextPrompt<string>("Enter service name:"));
         string login = AnsiConsole.Prompt(SpectreExtensions.CreateTextPrompt<string>("Enter login:"));
-        string password = AnsiConsole.Prompt(
-            SpectreExtensions.CreatePasswordPrompt("Enter password (or leave empty to generate one):")
-                .AllowEmpty()
-            );
-        if (string.IsNullOrWhiteSpace(password))
-        {
-            password = PasswordGenerator.GenerateSecurePassword();
-        }
-        _vault.Add(new LoginCredentials(service, login, password));
-        AnsiConsole.Write(
-            new Table()
-                .AddColumn("Service")
-                .AddColumn("Login")
-                .AddColumn("Password")
-                .AddRow(service.EscapeMarkup(), login.EscapeMarkup(), password.EscapeMarkup())
-        );
+        string password = SpectreExtensions.AskForPassword();
+        var newCredentials = new LoginCredentials(service, login, password);
+        _vault.Add(newCredentials);
+        newCredentials.DisplayLoginCredentialInTable();
     }
 
     [Command(CommandName = "list", CommandAliases = ["ls"],
         Usage = "list - List all stored passwords")]
     public void List()
     {
-        Table table = new Table()
-            .AddColumn("Service")
-            .AddColumn("Login")
-            .AddColumn("Password");
-        
-        foreach (LoginCredentials loginCredentials in _vault.GetAllLoginCredentials())
-        {
-            table.AddRow(loginCredentials.Service.EscapeMarkup(), loginCredentials.Login.EscapeMarkup(),
-                loginCredentials.Password.EscapeMarkup());
-        }
-        
-        AnsiConsole.Write(table);
+        _vault.GetLoginCredentials().DisplayLoginCredentialsInTable();
     }
 
     [Command(CommandName = "save", Usage = "save - Save changes to passwords")]
@@ -59,7 +36,7 @@ public partial class Commands
                 " If multiple found, enter selection mode.")]
     public void Remove(string service)
     {
-        var logins = _vault.GetAllLoginCredentials()
+        var logins = _vault.GetLoginCredentials()
             .Where(login => login.Service.StartsWith(service)).ToArray();
 
         switch (logins.Length)
@@ -86,6 +63,25 @@ public partial class Commands
                 {
                     _vault.Remove(selectedLogins);
                 }
+                return;
+        }
+    }
+
+    public void Update(string service)
+    {
+        var logins = _vault.GetLoginCredentials()
+            .Where(login => login.Service.StartsWith(service)).ToArray();
+
+        switch (logins.Length)
+        {
+            case 0:
+                SpectreExtensions.DisplayError($"Service '{service}' not found.");
+                return;
+            
+            case 1:
+                if (!AnsiConsole.Confirm($"Change password for a {logins[0].Service}?")) return;
+                string passwordNew = SpectreExtensions.AskForPassword();
+                _vault.Update(logins[0], logins[0] with {Password = passwordNew});
                 return;
         }
     }
