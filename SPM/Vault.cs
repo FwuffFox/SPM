@@ -80,9 +80,9 @@ public class Vault(VaultInfo vaultInfo)
     /// Retrieves login credentials stored in the vault.
     /// </summary>
     /// <returns>A read-only list of login credentials.</returns>
-    public IEnumerable<LoginCredentials> GetLoginCredentials(string startsWith)
+    public IEnumerable<LoginCredentials> GetLoginCredentials(string contains)
     {
-        return vaultInfo.Logins.Where(login => login.Service.StartsWith(startsWith));
+        return vaultInfo.Logins.Where(login => login.Service.Contains(contains, StringComparison.OrdinalIgnoreCase));
     }
 
     /// <summary>
@@ -123,6 +123,8 @@ public class Vault(VaultInfo vaultInfo)
     
     public void Update(LoginCredentials old, LoginCredentials @new)
     {
-        vaultInfo.Logins.Insert(vaultInfo.Logins.IndexOf(old), @new);
+        int index = vaultInfo.Logins.IndexOf(old);
+        vaultInfo.Logins.Remove(old);
+        vaultInfo.Logins.Insert(index, @new);
     }
 }

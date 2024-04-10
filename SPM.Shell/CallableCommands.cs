@@ -19,10 +19,14 @@ public partial class Commands
     }
 
     [Command(CommandName = "list", CommandAliases = ["ls"],
-        Usage = "list - List all stored passwords")]
-    public void List()
+        Usage = "list [searchString] - List all stored passwords that contains the optional parameter. If none or empty, list all")]
+    public void List(params object[] arguments)
     {
-        _vault.GetLoginCredentials().DisplayLoginCredentialsInTable();
+        var credentials = 
+            arguments.Length != 0 && !string.IsNullOrWhiteSpace((string) arguments[0])
+            ? _vault.GetLoginCredentials((string) arguments[0])
+            : _vault.GetLoginCredentials();
+        credentials.DisplayLoginCredentialsInTable();
     }
 
     [Command(CommandName = "save", Usage = "save - Save changes to passwords")]
@@ -32,12 +36,11 @@ public partial class Commands
     }
 
     [Command(CommandName = "remove", CommandAliases = ["rm"],
-        Usage = "remove <service_prefix> - Remove the password for a service that starts with prefix." +
+        Usage = "remove <searchString> - Remove the login for a service that contains a search string." +
                 " If multiple found, enter selection mode.")]
     public void Remove(string service)
     {
-        var logins = _vault.GetLoginCredentials()
-            .Where(login => login.Service.StartsWith(service)).ToArray();
+        var logins = _vault.GetLoginCredentials(service).ToArray();
 
         switch (logins.Length)
         {
@@ -53,7 +56,7 @@ public partial class Commands
                 return;
             
             default:
-                var selectedLogins = logins.CreateSelectionPrompt("Select logins to remove:").ToArray();
+                var selectedLogins = logins.CreateMultiSelectionPrompt("Select logins to remove:").ToArray();
                 if (selectedLogins.Length == 0)
                 {
                     SpectreExtensions.DisplayError("No logins selected.");
@@ -67,11 +70,13 @@ public partial class Commands
         }
     }
 
+    [Command(CommandName = "update", Usage = "update <searchString> - Update the password for a service that contains the searchString." +
+                                           " If multiple found, enter selection mode.")]
     public void Update(string service)
     {
-        var logins = _vault.GetLoginCredentials()
-            .Where(login => login.Service.StartsWith(service)).ToArray();
-
+        var logins = _vault.GetLoginCredentials(service).ToArray();
+        LoginCredentials selectedLogin = logins[0];
+        string passwordNew;
         switch (logins.Length)
         {
             case 0:
@@ -79,10 +84,19 @@ public partial class Commands
                 return;
             
             case 1:
-                if (!AnsiConsole.Confirm($"Change password for a {logins[0].Service}?")) return;
-                string passwordNew = SpectreExtensions.AskForPassword();
+                if (!AnsiConsole.Confirm($"Change password for a {selectedLogin.Service}?")) return;
+                passwordNew = SpectreExtensions.AskForPassword();
                 _vault.Update(logins[0], logins[0] with {Password = passwordNew});
                 return;
+            
+            default:
+                // Select which one to update. Only one
+                selectedLogin = logins.CreateSelectionPrompt("Select login to update:");
+                if (!AnsiConsole.Confirm($"Change password for a {selectedLogin.Service}?")) return;
+                passwordNew = SpectreExtensions.AskForPassword();
+                _vault.Update(logins[0], logins[0] with {Password = passwordNew});
+                return;
+                
         }
     }
 

@@ -74,12 +74,16 @@ internal static class Program
 
         try
         {
-            foundCommand.Invoke(commands, arguments);
+            var commandParams = foundCommand.GetParameters();
+            if (commandParams.Length == 1 && commandParams[0].ParameterType == typeof(object[]))
+                foundCommand.Invoke(commands, [arguments]);
+            else foundCommand.Invoke(commands, arguments);
         }
-        catch (Exception _) when (_ is TargetParameterCountException or ArgumentException)
+        catch (Exception e) when (e is TargetParameterCountException or ArgumentException)
         {
             Console.WriteLine("Wrong command usage.");
             Console.WriteLine($"Usage: {foundCommand.GetCustomAttribute<CommandAttribute>()!.Usage}");
+            AnsiConsole.WriteException(e);
         }
         catch (Exception e)
         {

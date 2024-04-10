@@ -33,11 +33,21 @@ public static class SpectreExtensions
         return textPrompt;
     }
 
-    internal static IEnumerable<T> CreateSelectionPrompt<T>(this IEnumerable<T> choices, string prompt) where T : notnull
+    internal static IEnumerable<T> CreateMultiSelectionPrompt<T>(this IEnumerable<T> choices, string prompt) where T : notnull
     {
         var selectionPrompt = new MultiSelectionPrompt<T>()
             .Title($"[blue]{prompt}[/]")
             .NotRequired()
+            .AddChoices(choices)
+            .UseConverter(item => item.ToString()!);
+
+        return AnsiConsole.Prompt(selectionPrompt);
+    }
+    
+    internal static T CreateSelectionPrompt<T>(this IEnumerable<T> choices, string prompt) where T : notnull
+    {
+        var selectionPrompt = new SelectionPrompt<T>()
+            .Title($"[blue]{prompt}[/]")
             .AddChoices(choices)
             .UseConverter(item => item.ToString()!);
 
@@ -81,9 +91,9 @@ public static class SpectreExtensions
     public static string AskForPassword()
     {
         string input = AnsiConsole.Prompt(
-            SpectreExtensions.CreatePasswordPrompt("Enter password (or leave empty to generate one):")
+            CreatePasswordPrompt("Enter password (or leave empty to generate one):")
                 .AllowEmpty()
         );
-        return string.IsNullOrWhiteSpace(input) ? input : PasswordGenerator.GenerateSecurePassword();
+        return !string.IsNullOrWhiteSpace(input) ? input : PasswordGenerator.GenerateSecurePassword();
     }
 }
