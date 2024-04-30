@@ -83,7 +83,6 @@ internal static class Program
         {
             Console.WriteLine("Wrong command usage.");
             Console.WriteLine($"Usage: {foundCommand.GetCustomAttribute<CommandAttribute>()!.Usage}");
-            AnsiConsole.WriteException(e);
         }
         catch (Exception e)
         {
