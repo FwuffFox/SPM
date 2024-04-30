@@ -51,7 +51,8 @@ public partial class Commands
             case 1:
                 if (AnsiConsole.Confirm($"Are you sure you want to remove the login for '{service}'?"))
                 {
-                    _vault.Remove(logins.First());
+                    LoginCredentials found = logins.First();
+                    _vault.Remove(ref found);
                 }
                 return;
             
@@ -86,7 +87,8 @@ public partial class Commands
             case 1:
                 if (!AnsiConsole.Confirm($"Change password for a {selectedLogin.Service}?")) return;
                 passwordNew = SpectreExtensions.AskForPassword();
-                _vault.Update(logins[0], logins[0] with {Password = passwordNew});
+                var @new = logins[0] with { Password = passwordNew };
+                _vault.Update(ref logins[0], ref @new);
                 return;
             
             default:
@@ -94,7 +96,8 @@ public partial class Commands
                 selectedLogin = logins.CreateSelectionPrompt("Select login to update:");
                 if (!AnsiConsole.Confirm($"Change password for a {selectedLogin.Service}?")) return;
                 passwordNew = SpectreExtensions.AskForPassword();
-                _vault.Update(logins[0], logins[0] with {Password = passwordNew});
+                @new = logins[0] with { Password = passwordNew };
+                _vault.Update(ref logins[0], ref @new);
                 return;
                 
         }

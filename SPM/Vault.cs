@@ -105,6 +105,17 @@ public class Vault(VaultInfo vaultInfo)
     {
         return vaultInfo.Logins.Remove(loginCredentials);
     }
+    
+    /// <summary>
+    /// Removes a loginCredentials if it exists.
+    /// </summary>
+    /// <param name="loginCredentials">Login to remove.</param>
+    /// <returns> true if item is successfully removed; otherwise, false.
+    /// This method also returns false if item was not found</returns>
+    public bool Remove(ref LoginCredentials loginCredentials)
+    {
+        return vaultInfo.Logins.Remove(loginCredentials);
+    }
 
     /// <summary>
     /// Removes a list of login credentials from the vault.
@@ -121,7 +132,17 @@ public class Vault(VaultInfo vaultInfo)
         return true;
     }
     
+    /// <summary>
+    /// Updates the given LoginCredentials.
+    /// </summary>
     public void Update(LoginCredentials old, LoginCredentials @new)
+    {
+        int index = vaultInfo.Logins.IndexOf(old);
+        vaultInfo.Logins.Remove(old);
+        vaultInfo.Logins.Insert(index, @new);
+    }
+    
+    public void Update(ref LoginCredentials old, ref LoginCredentials @new)
     {
         int index = vaultInfo.Logins.IndexOf(old);
         vaultInfo.Logins.Remove(old);

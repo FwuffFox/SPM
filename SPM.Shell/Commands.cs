@@ -23,7 +23,7 @@ public partial class Commands
 
     private void OpenExistingVault(string pathToVault)
     {
-        while (true)
+        for (int i = 0; i < 3; i++)
         {
             try
             {
@@ -39,6 +39,7 @@ public partial class Commands
                 AnsiConsole.WriteException(e);
             }
         }
+        SpectreExtensions.DisplayError("3 failed attempts at opening vault. Exiting now.");
     }
 
     private void CreateNewVault(string pathToVault)
