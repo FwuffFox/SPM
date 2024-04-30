@@ -23,6 +23,7 @@ public static class PasswordGenerator
         string passwordString;
         do
         {
+            password.Clear();
             byte[] randomBytes = RandomNumberGenerator.GetBytes(length);
 
             foreach (byte randomByte in randomBytes)
