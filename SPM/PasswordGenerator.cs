@@ -31,7 +31,7 @@ public static class PasswordGenerator
             }
 
             passwordString = password.ToString();
-        } while (CheckPassword(passwordString));
+        } while (!CheckPassword(passwordString));
         
         return passwordString;
     }

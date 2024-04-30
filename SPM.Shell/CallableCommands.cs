@@ -7,7 +7,7 @@ namespace SPM.Shell;
 
 public partial class Commands
 {
-    [Command(CommandName = "add", Usage = "add - Add a password for a service. Interactive.")]
+    [Command(CommandName = "add", CommandAliases = ["new"], Usage = "add - Add a password for a service. Interactive.")]
     public void Add()
     {
         string service = AnsiConsole.Prompt(SpectreExtensions.CreateTextPrompt<string>("Enter service name:"));
@@ -122,7 +122,7 @@ public partial class Commands
         Console.WriteLine("Available commands:");
         foreach (CommandAttribute commandAttribute in attributes)
         {
-            Console.WriteLine($"  {commandAttribute.CommandName,-20} - {commandAttribute.Usage}");
+            Console.WriteLine($"  {commandAttribute.CommandName,-20}{commandAttribute.Usage}");
             if (commandAttribute.CommandAliases.Length != 0)
             {
                 Console.WriteLine($"     Aliases: {string.Join(", ", commandAttribute.CommandAliases)}");

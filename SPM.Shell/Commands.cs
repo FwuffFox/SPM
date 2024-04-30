@@ -32,7 +32,7 @@ public partial class Commands
                     SpectreExtensions.CreatePasswordPrompt("Enter password to decrypt the vault:")
                 ).GetUtf8Bytes();
                 _vault = Vault.TryOpenVault(pathToVault, _password);
-                break;
+                return;
             }
             catch (CryptographicException e)
             {
@@ -40,6 +40,7 @@ public partial class Commands
             }
         }
         SpectreExtensions.DisplayError("3 failed attempts at opening vault. Exiting now.");
+        Exit();
     }
 
     private void CreateNewVault(string pathToVault)
