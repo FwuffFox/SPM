@@ -19,7 +19,6 @@ public class EncryptionTests
         var password = "TestPassword"u8.ToArray().AsSpan();
         var loginCredentials = new LoginCredentials("github.com", "TestLogin", "TestPassword");
         
-        var enc = new AesEncryption();
         using var encryptedDataStream = new MemoryStream();
         AesEncryption.EncryptData(encryptedDataStream, loginCredentials, password, true);
         encryptedDataStream.Position = 0;
