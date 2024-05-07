@@ -1,4 +1,3 @@
 Simple Password Manager
 ---
-Simple Password Manager written in C# as a student project. Main goal is the simplicity of use.
- 
+A simple password manager written in C#. First course university coursework. The main goal of a project is ease of use.
