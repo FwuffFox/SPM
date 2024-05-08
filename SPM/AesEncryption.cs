@@ -3,7 +3,7 @@ using System.Text.Json;
 
 namespace SPM;
 
-public class AesEncryption
+public static class AesEncryption
 {
     /// <summary>
     /// Encrypts data and writes it to passed File.
@@ -41,11 +41,7 @@ public class AesEncryption
         ReadOnlySpan<byte> password,
         bool leaveStreamOpen = false)
     {
-        Span<byte> key = stackalloc byte[32];
-        Span<byte> iv = stackalloc byte[16];
-        HashPasswordToKeyAndIv(password, key, iv);
-
-        using ICryptoTransform encryptor = Aes.Create().CreateEncryptor(key.ToArray(), iv.ToArray());
+        using ICryptoTransform encryptor = CreateEncryptor(password);
         using CryptoStream cryptoStream = new(stream, encryptor, CryptoStreamMode.Write, leaveStreamOpen);
 
         JsonSerializer.Serialize(cryptoStream, inputData, JsonSerializerOptions.Default);
@@ -63,25 +59,42 @@ public class AesEncryption
         ReadOnlySpan<byte> password,
         bool leaveStreamOpen = false)
     {
-        Span<byte> key = stackalloc byte[32];
-        Span<byte> iv = stackalloc byte[16];
-        HashPasswordToKeyAndIv(password, key, iv);
-
-        using ICryptoTransform decryptor = Aes.Create().CreateDecryptor(key.ToArray(), iv.ToArray());
+        using ICryptoTransform decryptor = CreateDecryptor(password);
         using CryptoStream cryptoStream = new(stream, decryptor, CryptoStreamMode.Read, leaveStreamOpen);
         return JsonSerializer.Deserialize<T>(cryptoStream, JsonSerializerOptions.Default)!;
     }
 
+    private static ICryptoTransform CreateDecryptor(ReadOnlySpan<byte> password)
+    {
+        Span<byte> key = stackalloc byte[32];
+        Span<byte> iv = stackalloc byte[16];
+        Span<byte> salt = stackalloc byte[16];
+        MD5.HashData(password, salt);
+        HashPasswordToKeyAndIv(password, key, iv, salt);
+
+        return Aes.Create().CreateDecryptor(key.ToArray(), iv.ToArray());
+    }
+    
+    private static ICryptoTransform CreateEncryptor(ReadOnlySpan<byte> password)
+    {
+        Span<byte> key = stackalloc byte[32];
+        Span<byte> iv = stackalloc byte[16];
+        Span<byte> salt = stackalloc byte[16];
+        MD5.HashData(password, salt);
+        HashPasswordToKeyAndIv(password, key, iv, salt);
+
+        return Aes.Create().CreateEncryptor(key.ToArray(), iv.ToArray());
+    }
+    
     private static void HashPasswordToKeyAndIv(
         ReadOnlySpan<byte> password,
         Span<byte> hashedPasswordKey,
-        Span<byte> hashedPasswordIv)
+        Span<byte> hashedPasswordIv,
+        ReadOnlySpan<byte> salt)
     {
-        using var kdf = new Rfc2898DeriveBytes(password.ToArray(),
-            new byte[16], 10000, HashAlgorithmName.SHA512);
-        byte[] derivedKey = kdf.GetBytes(48); // Get a 48-byte key
-        derivedKey.AsSpan(0, 32).CopyTo(hashedPasswordKey);
-        derivedKey.AsSpan(32, 16).CopyTo(hashedPasswordIv);
+        Span<byte> kdf = stackalloc byte[48];
+        Rfc2898DeriveBytes.Pbkdf2(password, salt, kdf, 10000, HashAlgorithmName.SHA512);
+        kdf[..32].CopyTo(hashedPasswordKey);
+        kdf[32..].CopyTo(hashedPasswordIv);
     }
-
 }
