@@ -13,6 +13,7 @@ public static class AesEncryption
     /// <param name="password">Password used for encryption.</param>
     public static void EncryptToFile<T>(string filePath, T inputData, ReadOnlySpan<byte> password)
     {
+        Directory.CreateDirectory(Path.GetDirectoryName(filePath));
         EncryptData(new FileStream(filePath, FileMode.Create, FileAccess.Write), inputData, password);
     }
 

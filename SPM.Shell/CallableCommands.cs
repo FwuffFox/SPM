@@ -76,7 +76,7 @@ public partial class Commands
     public void Update(string service)
     {
         var logins = _vault.GetLoginCredentials(service).ToArray();
-        LoginCredentials selectedLogin = logins[0];
+        LoginCredentials selectedLogin;
         string passwordNew;
         switch (logins.Length)
         {
@@ -85,16 +85,16 @@ public partial class Commands
                 return;
             
             case 1:
-                if (!AnsiConsole.Confirm($"Change password for a {selectedLogin.Service}?")) return;
+                selectedLogin = logins[0];
+                if (!AnsiConsole.Confirm($"Change password for {selectedLogin.Service} {selectedLogin.Login}?")) return;
                 passwordNew = SpectreExtensions.AskForPassword();
                 var @new = logins[0] with { Password = passwordNew };
                 _vault.Update(ref logins[0], ref @new);
                 return;
             
             default:
-                // Select which one to update. Only one
                 selectedLogin = logins.CreateSelectionPrompt("Select login to update:");
-                if (!AnsiConsole.Confirm($"Change password for a {selectedLogin.Service}?")) return;
+                if (!AnsiConsole.Confirm($"Change password for {selectedLogin.Service}?")) return;
                 passwordNew = SpectreExtensions.AskForPassword();
                 @new = logins[0] with { Password = passwordNew };
                 _vault.Update(ref logins[0], ref @new);
