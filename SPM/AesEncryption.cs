@@ -44,7 +44,6 @@ public static class AesEncryption
     {
         using ICryptoTransform encryptor = CreateEncryptor(password);
         using CryptoStream cryptoStream = new(stream, encryptor, CryptoStreamMode.Write, leaveStreamOpen);
-
         JsonSerializer.Serialize(cryptoStream, inputData, JsonSerializerOptions.Default);
     }
 
@@ -69,9 +68,7 @@ public static class AesEncryption
     {
         Span<byte> key = stackalloc byte[32];
         Span<byte> iv = stackalloc byte[16];
-        Span<byte> salt = stackalloc byte[16];
-        MD5.HashData(password, salt);
-        HashPasswordToKeyAndIv(password, key, iv, salt);
+        HashPasswordToKeyAndIv(password, key, iv);
 
         return Aes.Create().CreateDecryptor(key.ToArray(), iv.ToArray());
     }
@@ -80,21 +77,21 @@ public static class AesEncryption
     {
         Span<byte> key = stackalloc byte[32];
         Span<byte> iv = stackalloc byte[16];
-        Span<byte> salt = stackalloc byte[16];
-        MD5.HashData(password, salt);
-        HashPasswordToKeyAndIv(password, key, iv, salt);
+        HashPasswordToKeyAndIv(password, key, iv);
 
         return Aes.Create().CreateEncryptor(key.ToArray(), iv.ToArray());
     }
     
+    const int IterationAmount = 10000;
     private static void HashPasswordToKeyAndIv(
         ReadOnlySpan<byte> password,
         Span<byte> hashedPasswordKey,
-        Span<byte> hashedPasswordIv,
-        ReadOnlySpan<byte> salt)
+        Span<byte> hashedPasswordIv)
     {
         Span<byte> kdf = stackalloc byte[48];
-        Rfc2898DeriveBytes.Pbkdf2(password, salt, kdf, 10000, HashAlgorithmName.SHA512);
+        Span<byte> salt = stackalloc byte[16];
+        MD5.HashData(password, salt);
+        Rfc2898DeriveBytes.Pbkdf2(password, salt, kdf, IterationAmount, HashAlgorithmName.SHA512);
         kdf[..32].CopyTo(hashedPasswordKey);
         kdf[32..].CopyTo(hashedPasswordIv);
     }
